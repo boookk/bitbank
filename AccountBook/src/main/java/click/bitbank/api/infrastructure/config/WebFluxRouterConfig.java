@@ -22,6 +22,8 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
+
 @Configuration
 @EnableWebFlux // WebFlux 설정 활성화
 public class WebFluxRouterConfig implements WebFluxConfigurer {
@@ -68,11 +70,15 @@ public class WebFluxRouterConfig implements WebFluxConfigurer {
         )
     })
     @Bean
-    public RouterFunction<ServerResponse> accountBookRouterGETBuilder(AccountBookHandler accountBookHandler) {
+    public RouterFunction<ServerResponse> accountBookRouterBuilder(AccountBookHandler accountBookHandler) {
         return RouterFunctions.route()
-            .path("/account-book", builder -> builder
-                .GET("/search", accountBookHandler::accountBookSearch)
-            ).build();
+                .path("/account-book", builder -> builder
+                        .nest(accept(MediaType.APPLICATION_JSON), acceptBuilder ->
+                                acceptBuilder
+                                        .POST("/", accountBookHandler::accountBookWrite) // 가계부 작성
+                                        .POST("/search", accountBookHandler::accountBookSearch) // 가계부 목록 검색
+                        )
+                ).build();
     }
 
 }
